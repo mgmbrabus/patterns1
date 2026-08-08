@@ -24,10 +24,18 @@ jobs:
 
       - name: Start SUT
         run: |
-          java -jar artifacts/app-replan-delivery.jar &
-          sleep 10
+          java -jar artifacts/app-replan-delivery.jar > sut.log 2>&1 &
+          echo "Waiting for SUT to start..."
+          for i in {1..30}; do
+            if curl -s http://localhost:9999 > /dev/null; then
+              echo "SUT is up!"
+              break
+            fi
+            sleep 2
+          done
+          cat sut.log
 
-      - name: Build with Gradle
+      - name: Run tests
         run: ./gradlew test --info
         env:
-          HEADLESS: true
+          SELENIDE_HEADLESS: true
